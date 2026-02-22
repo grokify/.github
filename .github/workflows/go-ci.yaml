@@ -7,7 +7,7 @@ on:
         description: 'JSON array of Go versions to test'
         required: false
         type: string
-        default: '["1.25.x", "1.24.x"]'
+        default: '["1.26.x", "1.25.x"]'
       platforms:
         description: 'JSON array of platforms to test on'
         required: false
