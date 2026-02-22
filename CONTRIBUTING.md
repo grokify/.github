@@ -13,14 +13,28 @@ Thank you for your interest in contributing!
 
 ## Development Requirements
 
-- Go 1.24 or later
+### Go Projects
+
+- Go 1.25 or later
 - golangci-lint
 
+### TypeScript Projects
+
+- Node.js 20.x or later
+- npm
+
 ## Code Style
+
+### Go
 
 - Run `gofmt` for formatting
 - Run `golangci-lint run` before committing
 - Follow [Effective Go](https://go.dev/doc/effective_go) guidelines
+
+### TypeScript
+
+- Run `npm run lint` before committing
+- Follow project ESLint configuration
 
 ## Commit Messages
 
@@ -32,14 +46,17 @@ fix: resolve bug
 docs: update documentation
 test: add tests
 refactor: restructure code
+ci: update CI configuration
+chore: maintenance tasks
 ```
 
 ## Pull Request Process
 
 1. Ensure tests pass
-2. Update documentation if needed
-3. Add changelog entry if applicable
-4. Request review from maintainers
+2. Ensure linting passes
+3. Update documentation if needed
+4. Add changelog entry if applicable
+5. Request review from maintainers
 
 ## Questions?
 

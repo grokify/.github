@@ -122,7 +122,15 @@ Create three workflow files for comprehensive CI:
 ```yaml
 # .github/workflows/go-ci.yaml
 name: Go CI
-on: [push, pull_request]
+permissions:
+  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   ci:
     uses: grokify/.github/.github/workflows/go-ci.yaml@main
@@ -131,7 +139,15 @@ jobs:
 ```yaml
 # .github/workflows/go-lint.yaml
 name: Go Lint
-on: [push, pull_request]
+permissions:
+  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   lint:
     uses: grokify/.github/.github/workflows/go-lint.yaml@main
@@ -140,11 +156,17 @@ jobs:
 ```yaml
 # .github/workflows/go-codeql.yaml
 name: Go CodeQL
+permissions:
+  actions: read
+  contents: read
+  security-events: write
 on:
   push:
     branches: [main]
   schedule:
     - cron: '30 1 * * 0'
+  workflow_dispatch:
+
 jobs:
   codeql:
     uses: grokify/.github/.github/workflows/go-codeql.yaml@main
@@ -155,7 +177,15 @@ jobs:
 ```yaml
 # .github/workflows/ts-ci.yaml
 name: TypeScript CI
-on: [push, pull_request]
+permissions:
+  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   ci:
     uses: grokify/.github/.github/workflows/ts-ci.yaml@main
@@ -164,7 +194,15 @@ jobs:
 ```yaml
 # .github/workflows/ts-lint.yaml
 name: TypeScript Lint
-on: [push, pull_request]
+permissions:
+  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   lint:
     uses: grokify/.github/.github/workflows/ts-lint.yaml@main
@@ -177,11 +215,17 @@ For repos with both Go and TypeScript, create separate workflow files with path 
 ```yaml
 # .github/workflows/go-ci.yaml
 name: Go CI
+permissions:
+  contents: read
 on:
   push:
-    paths: ['**.go', 'go.mod', 'go.sum']
+    branches: [main]
+    paths: ['**.go', 'go.mod', 'go.sum', '.github/workflows/go-ci.yaml']
   pull_request:
-    paths: ['**.go', 'go.mod', 'go.sum']
+    branches: [main]
+    paths: ['**.go', 'go.mod', 'go.sum', '.github/workflows/go-ci.yaml']
+  workflow_dispatch:
+
 jobs:
   ci:
     uses: grokify/.github/.github/workflows/go-ci.yaml@main
@@ -190,11 +234,17 @@ jobs:
 ```yaml
 # .github/workflows/ts-ci.yaml
 name: TypeScript CI
+permissions:
+  contents: read
 on:
   push:
-    paths: ['ts/**']
+    branches: [main]
+    paths: ['ts/**', '.github/workflows/ts-ci.yaml']
   pull_request:
-    paths: ['ts/**']
+    branches: [main]
+    paths: ['ts/**', '.github/workflows/ts-ci.yaml']
+  workflow_dispatch:
+
 jobs:
   ci:
     uses: grokify/.github/.github/workflows/ts-ci.yaml@main
@@ -203,6 +253,63 @@ jobs:
 ```
 
 See [grokify/echartify](https://github.com/grokify/echartify) for a complete example.
+
+## Best Practices
+
+### Permissions
+
+Always specify minimal permissions for security:
+
+```yaml
+permissions:
+  contents: read
+```
+
+For CodeQL, additional permissions are required:
+
+```yaml
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+```
+
+### Branch Targeting
+
+Target specific branches to avoid running CI on feature branches pushed to forks:
+
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+```
+
+### Manual Dispatch
+
+Include `workflow_dispatch` to allow manual workflow runs from the GitHub Actions UI:
+
+```yaml
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+```
+
+## Versioning
+
+Workflows are referenced using Git refs:
+
+| Reference | Example | Stability |
+|-----------|---------|-----------|
+| Branch | `@main` | Always latest, may have breaking changes |
+| Tag | `@v1.0.0` | Pinned to specific version |
+| Major tag | `@v1` | Latest within major version (recommended for stability) |
+
+**Current recommendation:** Use `@main` while workflows are actively developed. Once stable, we will tag releases and recommend `@v1` for production use.
 
 ## Naming Convention
 
