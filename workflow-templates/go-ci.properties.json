@@ -1,0 +1,6 @@
+{
+  "name": "Go CI",
+  "description": "Standard Go CI pipeline with multi-platform testing and linting",
+  "iconName": "go",
+  "categories": ["Go"]
+}

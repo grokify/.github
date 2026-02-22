@@ -1,0 +1,42 @@
+name: Go CI
+
+on:
+  workflow_call:
+    inputs:
+      go-versions:
+        description: 'JSON array of Go versions to test'
+        required: false
+        type: string
+        default: '["1.25.x", "1.24.x"]'
+      platforms:
+        description: 'JSON array of platforms to test on'
+        required: false
+        type: string
+        default: '["ubuntu-latest", "macos-latest", "windows-latest"]'
+      test-flags:
+        description: 'Additional flags for go test'
+        required: false
+        type: string
+        default: '-v -covermode=count'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: ${{ fromJson(inputs.go-versions) }}
+        platform: ${{ fromJson(inputs.platforms) }}
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Run tests
+      run: go test ${{ inputs.test-flags }} ./...

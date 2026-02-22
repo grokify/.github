@@ -1,0 +1,6 @@
+{
+  "name": "Go CodeQL",
+  "description": "CodeQL static analysis security testing for Go",
+  "iconName": "go",
+  "categories": ["Go", "Security"]
+}

@@ -1,0 +1,15 @@
+name: Go CI
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - $default-branch
+  pull_request:
+    branches:
+      - $default-branch
+  workflow_dispatch:
+
+jobs:
+  ci:
+    uses: grokify/.github/.github/workflows/go-ci.yaml@main
