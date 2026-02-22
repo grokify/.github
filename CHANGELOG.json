@@ -1,0 +1,38 @@
+{
+  "irVersion": "1.0",
+  "project": ".github",
+  "repository": "https://github.com/grokify/.github",
+  "versioning": "semver",
+  "commitConvention": "conventional",
+  "maintainers": ["grokify"],
+  "releases": [
+    {
+      "version": "v0.1.0",
+      "date": "2026-02-21",
+      "highlights": [
+        { "description": "Reusable GitHub Actions workflows for Go and TypeScript with thin wrapper pattern" },
+        { "description": "Workflow templates for quick adoption in new repositories" },
+        { "description": "Community health files (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY) for all grokify repos" }
+      ],
+      "added": [
+        { "description": "Go CI reusable workflow with multi-platform matrix (Go 1.24/1.25, Linux/macOS/Windows)", "commit": "16dff39" },
+        { "description": "Go Lint reusable workflow with golangci-lint and configurable timeout/args", "commit": "16dff39" },
+        { "description": "Go CodeQL reusable workflow for SAST security scanning", "commit": "16dff39" },
+        { "description": "TypeScript CI reusable workflow with Node.js matrix and working-directory support", "commit": "2bcc1dc" },
+        { "description": "TypeScript Lint reusable workflow with configurable npm script", "commit": "2bcc1dc" },
+        { "description": "Workflow templates for go-ci, go-lint, go-codeql, ts-ci, ts-lint", "commit": "074e343" },
+        { "description": "Sample golangci.yaml configuration with recommended linters", "commit": "16dff39" },
+        { "description": "CODE_OF_CONDUCT.md with Contributor Covenant v2.0", "commit": "634975b" },
+        { "description": "CONTRIBUTING.md with Go and TypeScript development guidelines", "commit": "634975b" },
+        { "description": "SECURITY.md with vulnerability reporting policy", "commit": "634975b" }
+      ],
+      "documentation": [
+        { "description": "README with complete workflow documentation, input tables, and recipes", "commit": "634975b" },
+        { "description": "Best practices section covering permissions, branch targeting, and workflow_dispatch", "commit": "f0ff552" },
+        { "description": "Versioning section explaining @main vs @v1 stability", "commit": "f0ff552" },
+        { "description": "Multi-language repository recipe with path filters", "commit": "f0ff552" },
+        { "description": "Naming convention documentation for pipelineconductor integration", "commit": "634975b" }
+      ]
+    }
+  ]
+}
