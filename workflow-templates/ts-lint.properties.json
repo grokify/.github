@@ -1,0 +1,6 @@
+{
+  "name": "TypeScript Lint",
+  "description": "TypeScript linting with ESLint",
+  "iconName": "typescript",
+  "categories": ["TypeScript", "Node.js"]
+}

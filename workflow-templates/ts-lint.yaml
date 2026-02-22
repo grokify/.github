@@ -1,0 +1,15 @@
+name: TypeScript Lint
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - $default-branch
+  pull_request:
+    branches:
+      - $default-branch
+  workflow_dispatch:
+
+jobs:
+  lint:
+    uses: grokify/.github/.github/workflows/ts-lint.yaml@main

@@ -1,0 +1,6 @@
+{
+  "name": "Go Lint",
+  "description": "Go linting with golangci-lint",
+  "iconName": "go",
+  "categories": ["Go"]
+}
