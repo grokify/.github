@@ -1,0 +1,6 @@
+{
+  "name": "TypeScript CI",
+  "description": "TypeScript CI workflow using reusable workflows from grokify/.github",
+  "iconName": "typescript",
+  "categories": ["TypeScript", "Node.js"]
+}

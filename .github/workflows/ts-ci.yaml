@@ -1,0 +1,58 @@
+name: TypeScript CI
+
+on:
+  workflow_call:
+    inputs:
+      node-versions:
+        description: 'JSON array of Node.js versions to test'
+        required: false
+        type: string
+        default: '["20.x", "22.x"]'
+      platforms:
+        description: 'JSON array of platforms to test on'
+        required: false
+        type: string
+        default: '["ubuntu-latest"]'
+      working-directory:
+        description: 'Directory containing package.json'
+        required: false
+        type: string
+        default: '.'
+      test-script:
+        description: 'npm script to run for testing'
+        required: false
+        type: string
+        default: 'test'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(inputs.node-versions) }}
+        platform: ${{ fromJson(inputs.platforms) }}
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm run ${{ inputs.test-script }}
+
+    - name: Build
+      run: npm run build --if-present
