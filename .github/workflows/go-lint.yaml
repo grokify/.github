@@ -7,7 +7,7 @@ on:
         description: 'Go version for linting'
         required: false
         type: string
-        default: '1.x'
+        default: '1.26.x'
       golangci-lint-version:
         description: 'golangci-lint version'
         required: false
