@@ -1,0 +1,82 @@
+name: TypeScript CI (pnpm)
+
+on:
+  workflow_call:
+    inputs:
+      node-versions:
+        description: 'JSON array of Node.js versions to test'
+        required: false
+        type: string
+        default: '["20.x", "22.x"]'
+      pnpm-version:
+        description: 'pnpm version to use'
+        required: false
+        type: string
+        default: '9'
+      platforms:
+        description: 'JSON array of platforms to test on'
+        required: false
+        type: string
+        default: '["ubuntu-latest"]'
+      working-directory:
+        description: 'Directory containing package.json'
+        required: false
+        type: string
+        default: '.'
+      test-script:
+        description: 'npm script to run for testing'
+        required: false
+        type: string
+        default: 'test'
+      build-script:
+        description: 'npm script to run for building'
+        required: false
+        type: string
+        default: 'build'
+      typecheck-script:
+        description: 'npm script to run for type checking (empty to skip)'
+        required: false
+        type: string
+        default: 'typecheck'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(inputs.node-versions) }}
+        platform: ${{ fromJson(inputs.platforms) }}
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+        cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run type check
+      if: inputs.typecheck-script != ''
+      run: pnpm run ${{ inputs.typecheck-script }}
+
+    - name: Run tests
+      run: pnpm run ${{ inputs.test-script }}
+
+    - name: Build
+      run: pnpm run ${{ inputs.build-script }}

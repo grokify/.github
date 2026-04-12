@@ -1,0 +1,26 @@
+{
+  "name": "grokify-github-workflows",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared GitHub Actions workflows with TypeScript tests",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint 'tests/**/*.ts'"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2",
+    "yaml": "^2.3.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
