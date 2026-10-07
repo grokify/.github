@@ -5,6 +5,14 @@
   "versioning": "semver",
   "commitConvention": "conventional",
   "maintainers": ["grokify"],
+  "unreleased": {
+    "added": [
+      {
+        "description": "Go Release reusable workflow (`go-release.yaml`): GoReleaser build and publish with a consistent release body (release-notes link plus compare link, or a scope-aware commit list), a post-publish check that the release has assets, and a `snapshot` dry-run mode that uploads `dist/` and previews the notes",
+        "commit": "c973e30"
+      }
+    ]
+  },
   "releases": [
     {
       "version": "v0.1.0",
