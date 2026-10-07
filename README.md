@@ -62,6 +62,78 @@ jobs:
 | `go-version` | `'1.24.x'` | Go version for analysis |
 | `queries` | `'security-extended,security-and-quality'` | CodeQL query suites |
 
+#### Go Release (`go-release.yaml`)
+
+Builds and publishes a release with [GoReleaser](https://goreleaser.com). Build, archive, and
+packaging settings stay in the repository's `.goreleaser.yaml`.
+
+```yaml
+# .github/workflows/release.yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: grokify/.github/.github/workflows/go-release.yaml@main
+```
+
+The workflow supplies the release body itself, so it is the same in every repository. If
+`docs/releases/<tag>.md` exists, the body links to that page on the docs site and to the
+compare view:
+
+```text
+**Release Notes**: [`v0.6.0`](https://grokify.github.io/schemakit/releases/v0.6.0/)
+
+**Full Changelog**: https://github.com/grokify/schemakit/compare/v0.5.0...v0.6.0
+```
+
+Otherwise it lists the commits since the previous tag, leaving out `docs`, `test`, `chore`,
+`ci`, and `build` commits whether or not they have a `(scope)`. After publishing, it fails the
+run if the release has fewer than two assets (an archive and its checksums), so a release
+that has notes but no binaries is not reported as a success.
+
+**Inputs:**
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `go-version-file` | `go.mod` | File that declares the Go version to build with |
+| `goreleaser-version` | `'~> v2'` | GoReleaser version constraint |
+| `goreleaser-config` | `''` | Config path; empty lets GoReleaser find `.goreleaser.yaml` |
+| `notes-dir` | `docs/releases` | Directory of per-release notes pages named `<tag>.md` |
+| `docs-url` | `''` | Docs site base URL; empty means `https://<owner>.github.io/<repo>` |
+| `snapshot` | `false` | Dry run: build without publishing (see below) |
+
+The calling job must grant `contents: write`.
+
+**Dry run.** Check a new or changed `.goreleaser.yaml` before tagging by calling the workflow
+with `snapshot: true` from a manually triggered wrapper. It builds and packages every target,
+uploads `dist/` as the `goreleaser-dist` artifact, and writes a preview of the release notes
+(for the latest existing tag) to the job summary. Nothing is published.
+
+```yaml
+# .github/workflows/release-dry-run.yaml
+name: Release Dry Run
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    uses: grokify/.github/.github/workflows/go-release.yaml@main
+    with:
+      snapshot: true
+```
+
 ### TypeScript
 
 #### TypeScript CI (`ts-ci.yaml`)

@@ -1,0 +1,183 @@
+name: Go Release
+
+# Builds and publishes a Go release with GoReleaser. Call it from a tag-triggered
+# wrapper; build, archive, and brew settings stay in the repo's .goreleaser.yaml.
+#
+# The release body is supplied here rather than by GoReleaser's changelog, so it
+# is consistent across repos: a link to the tag's release-notes page and a
+# compare link when <notes-dir>/<tag>.md exists, otherwise a commit list that
+# omits docs, test, chore, ci, and build commits whether or not they have a
+# (scope).
+#
+# Dry run: call with snapshot: true (for example from a workflow_dispatch
+# wrapper) to build and package without publishing. It uploads dist/ as an
+# artifact and writes the would-be release notes to the job summary. Use it to
+# check a new or changed .goreleaser.yaml before tagging.
+#
+# The calling job must grant `contents: write`.
+
+on:
+  workflow_call:
+    inputs:
+      go-version-file:
+        description: 'File that declares the Go version to build with'
+        required: false
+        type: string
+        default: 'go.mod'
+      goreleaser-version:
+        description: 'GoReleaser version constraint'
+        required: false
+        type: string
+        default: '~> v2'
+      goreleaser-config:
+        description: 'Path to the GoReleaser config (empty: GoReleaser finds .goreleaser.yaml)'
+        required: false
+        type: string
+        default: ''
+      notes-dir:
+        description: 'Directory holding per-release notes pages named <tag>.md'
+        required: false
+        type: string
+        default: 'docs/releases'
+      docs-url:
+        description: 'Base URL of the published docs site (default: https://<owner>.github.io/<repo>)'
+        required: false
+        type: string
+        default: ''
+      snapshot:
+        description: 'Dry run: build without publishing, upload dist/, and preview the release notes'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: ${{ inputs.go-version-file }}
+
+      - name: Write release notes
+        id: notes
+        env:
+          REPO_FULL: ${{ github.repository }}
+          NOTES_DIR: ${{ inputs.notes-dir }}
+          DOCS_URL: ${{ inputs.docs-url }}
+          SNAPSHOT: ${{ inputs.snapshot }}
+        run: |
+          set -euo pipefail
+
+          # A real run is triggered by a tag. A dry run has no tag, so it previews
+          # the notes for the latest one.
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            if [ "$SNAPSHOT" != "true" ]; then
+              echo "::error::not a tag ref; set snapshot: true for a dry run"
+              exit 1
+            fi
+            tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+            if [ -z "$tag" ]; then
+              echo "::error::dry run needs at least one existing tag to preview release notes"
+              exit 1
+            fi
+          fi
+          prev="$(git describe --tags --abbrev=0 "${tag}^" 2>/dev/null || true)"
+
+          owner="${REPO_FULL%%/*}"
+          repo="${REPO_FULL#*/}"
+          base="${DOCS_URL:-https://${owner}.github.io/${repo}}"
+          base="${base%/}"
+          notes_dir="${NOTES_DIR%/}"
+          page="${notes_dir}/${tag}.md"
+          site_path="${notes_dir#docs/}"
+
+          out="${RUNNER_TEMP}/release-notes.md"
+          {
+            if [ -f "$page" ]; then
+              printf '**Release Notes**: [`%s`](%s/%s/%s/)\n' "$tag" "$base" "$site_path" "$tag"
+            else
+              printf '## Changelog\n\n'
+              range="${prev:+${prev}..}${tag}"
+              git log --no-merges --pretty='* %h %s' "$range" \
+                | grep -v -E '^\* [0-9a-f]+ (docs|test|chore|ci|build)(\([^)]*\))?!?:' || true
+            fi
+            if [ -n "$prev" ]; then
+              printf '\n**Full Changelog**: https://github.com/%s/compare/%s...%s\n' "$REPO_FULL" "$prev" "$tag"
+            fi
+          } > "$out"
+
+          {
+            if [ "$SNAPSHOT" = "true" ]; then
+              echo "### Dry run: release notes preview for \`${tag}\`"
+            else
+              echo "### Release notes for \`${tag}\`"
+            fi
+            echo
+            cat "$out"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "file=${out}" >> "$GITHUB_OUTPUT"
+
+      - name: Compose GoReleaser arguments
+        id: args
+        env:
+          NOTES_FILE: ${{ steps.notes.outputs.file }}
+          CONFIG: ${{ inputs.goreleaser-config }}
+          SNAPSHOT: ${{ inputs.snapshot }}
+        run: |
+          set -euo pipefail
+          args="release --clean --release-notes=${NOTES_FILE}"
+          if [ -n "$CONFIG" ]; then
+            args="${args} --config=${CONFIG}"
+          fi
+          if [ "$SNAPSHOT" = "true" ]; then
+            args="${args} --snapshot --skip=publish,announce,validate"
+          fi
+          echo "args=${args}" >> "$GITHUB_OUTPUT"
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: ${{ inputs.goreleaser-version }}
+          args: ${{ steps.args.outputs.args }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload dry-run artifacts
+        if: ${{ inputs.snapshot }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: goreleaser-dist
+          path: dist/
+          if-no-files-found: error
+
+      # A run can finish green and leave a release with notes but no binaries.
+      # Fail loudly: a release needs at least one archive plus its checksums.
+      - name: Verify release assets
+        if: ${{ !inputs.snapshot }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.notes.outputs.tag }}
+        run: |
+          set -euo pipefail
+          count="$(gh release view "$TAG" --json assets --jq '.assets | length')"
+          if [ "$count" -lt 2 ]; then
+            echo "::error::release ${TAG} has ${count} asset(s); expected at least an archive and checksums"
+            exit 1
+          fi
+          echo "release ${TAG} has ${count} asset(s)"
